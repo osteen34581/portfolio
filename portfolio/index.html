@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>AUSTINE OLUOCH | Elite Portfolio</title>
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<!-- Google Font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- EmailJS -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+scroll-behavior:smooth;
+font-family:'Inter',sans-serif;
+}
+
+body{
+background:#050816;
+color:white;
+overflow-x:hidden;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{
+width:8px;
+}
+
+::-webkit-scrollbar-track{
+background:#050816;
+}
+
+::-webkit-scrollbar-thumb{
+background:#3b82f6;
+border-radius:999px;
+}
+
+/* BACKGROUND */
+.bg-grid{
+background:
+radial-gradient(circle at top left,#3b82f633,transparent 25%),
+radial-gradient(circle at bottom right,#9333ea33,transparent 25%),
+#050816;
+}
+
+/* GLASS EFFECT */
+.glass{
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(14px);
+border:1px solid rgba(255,255,255,0.08);
+}
+
+/* BUTTON */
+.btn-main{
+background:linear-gradient(to right,#2563eb,#9333ea);
+transition:.4s;
+}
+
+.btn-main:hover{
+transform:translateY(-4px);
+box-shadow:0 10px 30px rgba(59,130,246,.4);
+}
+
+/* PROJECT CARDS */
+.project-card{
+transition:.4s ease;
+}
+
+.project-card:hover{
+transform:translateY(-10px);
+box-shadow:0 20px 40px rgba(0,0,0,.35);
+}
+
+/* SKILLS */
+.skill-track{
+height:10px;
+background:#1e293b;
+border-radius:999px;
+overflow:hidden;
+}
+
+.skill-fill{
+height:100%;
+width:0;
+background:linear-gradient(to right,#3b82f6,#9333ea);
+transition:2s ease;
+}
+
+/* ANIMATION */
+.fade-up{
+opacity:0;
+transform:translateY(40px);
+transition:1s ease;
+}
+
+.show{
+opacity:1;
+transform:translateY(0);
+}
+
+/* FLOAT */
+.float{
+animation:float 4s ease-in-out infinite;
+}
+
+@keyframes float{
+0%{transform:translateY(0px);}
+50%{transform:translateY(-15px);}
+100%{transform:translateY(0px);}
+}
+
+/* GITHUB STATS */
+.github-stats img{
+width:100%;
+height:auto;
+border-radius:15px;
+box-shadow:0 8px 32px rgba(0,0,0,.3);
+}
+
+/* MOBILE */
+@media(max-width:768px){
+
+.hero-grid{
+grid-template-columns:1fr !important;
+text-align:center;
+}
+
+.hero-buttons{
+justify-content:center;
+}
+
+.socials{
+justify-content:center;
+}
+
+.hero-title{
+font-size:3.2rem !important;
+}
+
+/* HAMBURGER MENU */
+.hamburger{
+width:30px;
+height:24px;
+display:flex;
+flex-direction:column;
+justify-content:space-around;
+cursor:pointer;
+}
+
+.hamburger span{
+width:100%;
+height:3px;
+background:#fff;
+border-radius:2px;
+transition:.3s;
+}
+
+.hamburger.active span:nth-child(1){
+transform:rotate(45deg) translate(8px,8px);
+}
+
+.hamburger.active span:nth-child(2){
+opacity:0;
+}
+
+.hamburger.active span:nth-child(3){
+transform:rotate(-45deg) translate(7px,-6px);
+}
+
+/* MOBILE MENU */
+.mobile-nav{
+position:fixed;
+top:70px;
+left:0;
+width:100%;
+background:rgba(5,8,22,.95);
+backdrop-filter:blur(14px);
+border-bottom:1px solid rgba(255,255,255,0.08);
+max-height:0;
+overflow:hidden;
+transition:.3s ease;
+z-index:40;
+}
+
+.mobile-nav.active{
+max-height:300px;
+}
+
+.mobile-nav a{
+display:block;
+padding:15px 24px;
+border-bottom:1px solid rgba(255,255,255,0.05);
+hover:text-blue-400;
+transition:.2s;
+}
+
+.mobile-nav a:hover{
+color:#3b82f6;
+padding-left:30px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<header class="fixed top-0 left-0 w-full z-50 glass">
+
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+
+<h1 class="text-2xl font-black tracking-tight">
+AUSTINE OLUOCH
+</h1>
+
+<nav class="hidden md:flex gap-8 text-sm font-medium">
+
+<a href="#about" class="hover:text-blue-400 transition">
+About
+</a>
+
+<a href="#experience" class="hover:text-blue-400 transition">
+Experience
+</a>
+
+<a href="#education" class="hover:text-blue-400 transition">
+Education
+</a>
+
+<a href="#certifications" class="hover:text-blue-400 transition">
+Certifications
+</a>
+
+<a href="#skills" class="hover:text-blue-400 transition">
+Skills
+</a>
+
+<a href="#projects" class="hover:text-blue-400 transition">
+Projects
+</a>
+
+<a href="#github" class="hover:text-blue-400 transition">
+GitHub
+</a>
+
+<a href="#contact" class="hover:text-blue-400 transition">
+Contact
+</a>
+
+</nav>
+
+<!-- MOBILE HAMBURGER -->
+<div class="md:hidden hamburger" id="hamburger">
+<span></span>
+<span></span>
+<span></span>
+</div>
+
+</div>
+
+<!-- MOBILE MENU -->
+<nav class="mobile-nav" id="mobileNav">
+<a href="#about" class="text-sm font-medium">About</a>
+<a href="#experience" class="text-sm font-medium">Experience</a>
+<a href="#education" class="text-sm font-medium">Education</a>
+<a href="#certifications" class="text-sm font-medium">Certifications</a>
+<a href="#skills" class="text-sm font-medium">Skills</a>
+<a href="#projects" class="text-sm font-medium">Projects</a>
+<a href="#github" class="text-sm font-medium">GitHub</a>
+<a href="#contact" class="text-sm font-medium">Contact</a>
+</nav>
+
+</header>
+
+<!-- HERO -->
+<section class="min-h-screen flex items-center bg-grid pt-28">
+
+<div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-20 items-center hero-grid">
+
+<!-- LEFT -->
+<div class="fade-up">
+
+<p class="text-blue-400 font-semibold mb-5 tracking-wide">
+AVAILABLE FOR INTERNSHIPS • REMOTE JOBS • FREELANCE
+</p>
+
+<h1 class="text-6xl md:text-7xl font-black leading-tight hero-title mb-6">
+
+Hi, I'm
+<span class="text-blue-400">
+AUSTINE OLUOCH
+</span>
+
+</h1>
+
+<p class="text-xl text-slate-300 leading-relaxed mb-8 max-w-xl">
+
+Python Developer, Web Developer, and AI Enthusiast building modern digital products, smart automation systems, and real-world problem-solving applications.
+
+</p>
+
+<div class="flex gap-4 flex-wrap hero-buttons">
+
+<a href="#projects"
+class="px-8 py-4 rounded-full btn-main font-semibold">
+View Projects
+</a>
+
+<a href="#contact"
+class="px-8 py-4 rounded-full border border-slate-600 hover:border-blue-400 transition">
+Hire Me
+</a>
+
+<a href="cv.pdf"
+class="px-8 py-4 rounded-full glass hover:bg-white/10 transition">
+Download CV
+</a>
+
+</div>
+
+<!-- SOCIALS -->
+<div class="flex gap-6 mt-10 text-2xl socials">
+
+<a href="https://github.com/osteen34581">
+<i class="fab fa-github hover:text-blue-400 transition"></i>
+</a>
+
+<a href="YOUR_LINKEDIN_LINK">
+<i class="fab fa-linkedin hover:text-blue-400 transition"></i>
+</a>
+
+<a href="YOUR_TWITTER_LINK">
+<i class="fab fa-twitter hover:text-blue-400 transition"></i>
+</a>
+
+<a href="YOUR_INSTAGRAM_LINK">
+<i class="fab fa-instagram hover:text-blue-400 transition"></i>
+</a>
+
+<a href="mailto:austinelapi@gmail.com">
+<i class="fas fa-envelope hover:text-blue-400 transition"></i>
+</a>
+
+</div>
+
+</div>
+
+<!-- RIGHT -->
+<div class="fade-up flex justify-center">
+
+<div class="relative">
+
+<div class="absolute inset-0 bg-blue-500 blur-3xl opacity-20 rounded-full"></div>
+
+<img src="profile.jpg"
+alt="AUSTINE OLUOCH"
+class="w-80 h-80 md:w-[420px] md:h-[420px] object-cover rounded-[40px] border border-slate-700 shadow-2xl glow float relative z-10">
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="py-28">
+
+<div class="max-w-6xl mx-auto px-6 fade-up">
+
+<h2 class="text-5xl font-black mb-12">
+About Me
+</h2>
+
+<div class="glass rounded-[30px] p-10 md:p-14">
+
+<p class="text-slate-300 text-lg leading-relaxed">
+
+I’m passionate about building modern applications that combine clean design, strong functionality, and real-world impact.
+
+My interests include Python development, AI systems, automation tools, web technologies, and cybersecurity awareness.
+
+I enjoy creating projects that help people while continuously improving my skills as a developer and problem solver.
+
+</p>
+
+<div class="grid md:grid-cols-3 gap-8 mt-14">
+
+<div>
+<h3 class="text-5xl font-black text-blue-400">
+10+
+</h3>
+
+<p class="text-slate-400 mt-3">
+Projects Built
+</p>
+</div>
+
+<div>
+<h3 class="text-5xl font-black text-blue-400">
+100%
+</h3>
+
+<p class="text-slate-400 mt-3">
+Dedication
+</p>
+</div>
+
+<div>
+<h3 class="text-5xl font-black text-blue-400">
+24/7
+</h3>
+
+<p class="text-slate-400 mt-3">
+Learning Mindset
+</p>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience" class="py-28">
+
+<div class="max-w-6xl mx-auto px-6 fade-up">
+
+<h2 class="text-5xl font-black mb-14">
+Experience
+</h2>
+
+<div class="space-y-6">
+
+<!-- EXPERIENCE 1 -->
+<div class="glass p-8 rounded-[25px] border-l-4 border-blue-400">
+
+<div class="flex justify-between items-start mb-3">
+
+<div>
+
+<h3 class="text-2xl font-bold">
+Junior Web Developer
+</h3>
+
+<p class="text-blue-400 font-semibold mt-1">
+Self-Employed
+</p>
+
+</div>
+
+<span class="text-slate-400 text-sm bg-slate-800 px-4 py-2 rounded-full">
+Present 2026
+</span>
+
+</div>
+
+<p class="text-slate-300 leading-relaxed mt-4">
+Creating a chess website and deploying it online while achieving professional certification in web development.
+</p>
+
+<div class="flex flex-wrap gap-2 mt-5">
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+HTML/CSS
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+JavaScript
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+Web Development
+</span>
+
+</div>
+
+</div>
+
+<!-- EXPERIENCE 2 -->
+<div class="glass p-8 rounded-[25px] border-l-4 border-purple-400">
+
+<div class="flex justify-between items-start mb-3">
+
+<div>
+
+<h3 class="text-2xl font-bold">
+Web Developer & Freelancer
+</h3>
+
+<p class="text-purple-400 font-semibold mt-1">
+Self-Employed / Online Contracts
+</p>
+
+</div>
+
+<span class="text-slate-400 text-sm bg-slate-800 px-4 py-2 rounded-full">
+Currently Working
+</span>
+
+</div>
+
+<p class="text-slate-300 leading-relaxed mt-4">
+Building responsive web applications for diverse clients, delivering custom solutions, and maintaining strong client relationships through effective communication and quality deliverables.
+</p>
+
+<div class="flex flex-wrap gap-2 mt-5">
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+Full Stack
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+Client Projects
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+Freelancing
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- EDUCATION -->
+<section id="education" class="py-28 bg-[#0b1120]">
+
+<div class="max-w-6xl mx-auto px-6 fade-up">
+
+<h2 class="text-5xl font-black mb-14">
+Education
+</h2>
+
+<div class="space-y-6">
+
+<!-- EDUCATION 1 -->
+<div class="glass p-8 rounded-[25px] border-l-4 border-green-400">
+
+<div class="flex justify-between items-start mb-3">
+
+<div>
+
+<h3 class="text-2xl font-bold">
+Bachelor's Degree in Information Technology
+</h3>
+
+<p class="text-green-400 font-semibold mt-1">
+University of Kabianga
+</p>
+
+</div>
+
+<span class="text-slate-400 text-sm bg-slate-800 px-4 py-2 rounded-full">
+2025 - Present
+</span>
+
+</div>
+
+<p class="text-slate-300 leading-relaxed mt-4">
+Active member of Ajira club, Catholic Student Association, and chess player.
+</p>
+
+<div class="flex flex-wrap gap-2 mt-5">
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+Information Technology
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+Student Leadership
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+Chess
+</span>
+
+</div>
+
+</div>
+
+<!-- EDUCATION 2 -->
+<div class="glass p-8 rounded-[25px] border-l-4 border-orange-400">
+
+<div class="flex justify-between items-start mb-3">
+
+<div>
+
+<h3 class="text-2xl font-bold">
+KCPE Certificate
+</h3>
+
+<p class="text-orange-400 font-semibold mt-1">
+High School in ST. ANTONY DAGO KOKORE
+</p>
+
+</div>
+
+<span class="text-slate-400 text-sm bg-slate-800 px-4 py-2 rounded-full">
+4 Years
+</span>
+
+</div>
+
+<p class="text-slate-300 leading-relaxed mt-4">
+Achieved KCPE certificate and served as a student leader during high school.
+</p>
+
+<div class="flex flex-wrap gap-2 mt-5">
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+KCPE Certificate
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+Student Leadership
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full text-xs">
+High School
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- CERTIFICATIONS -->
+<section id="certifications" class="py-28">
+
+<div class="max-w-6xl mx-auto px-6 fade-up">
+
+<h2 class="text-5xl font-black mb-14">
+Certifications
+</h2>
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+<!-- CERTIFICATION 1 -->
+<div class="glass p-6 rounded-[20px] text-center hover:scale-105 transition-transform">
+
+<div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+
+<i class="fas fa-certificate text-2xl text-white"></i>
+
+</div>
+
+<h3 class="text-xl font-bold mb-2">
+CS50 Introduction to Programming
+</h3>
+
+<p class="text-blue-400 font-semibold mb-3">
+Harvard University
+</p>
+
+<p class="text-slate-300 text-sm mb-4">
+Introduction to web development with Python
+</p>
+
+<span class="text-slate-400 text-xs bg-slate-800 px-3 py-1 rounded-full">
+2025
+</span>
+
+<div class="mt-4">
+<a href="cs50-certificate.pdf" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-semibold rounded-full hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+<i class="fas fa-eye"></i>
+View Certificate
+</a>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- SKILLS -->
+<section id="skills" class="py-28 bg-[#0b1120]">
+
+<div class="max-w-6xl mx-auto px-6 fade-up">
+
+<h2 class="text-5xl font-black mb-14">
+Skills
+</h2>
+
+<div class="grid md:grid-cols-2 gap-10">
+
+<!-- SKILL -->
+<div class="glass p-8 rounded-3xl">
+
+<div class="flex justify-between mb-3">
+<span>Python</span>
+<span>90%</span>
+</div>
+
+<div class="skill-track">
+<div class="skill-fill" data-width="90%"></div>
+</div>
+
+</div>
+
+<!-- SKILL -->
+<div class="glass p-8 rounded-3xl">
+
+<div class="flex justify-between mb-3">
+<span>Web Development</span>
+<span>85%</span>
+</div>
+
+<div class="skill-track">
+<div class="skill-fill" data-width="85%"></div>
+</div>
+
+</div>
+
+<!-- SKILL -->
+<div class="glass p-8 rounded-3xl">
+
+<div class="flex justify-between mb-3">
+<span>JavaScript</span>
+<span>80%</span>
+</div>
+
+<div class="skill-track">
+<div class="skill-fill" data-width="80%"></div>
+</div>
+
+</div>
+
+<!-- SKILL -->
+<div class="glass p-8 rounded-3xl">
+
+<div class="flex justify-between mb-3">
+<span>AI & Automation</span>
+<span>75%</span>
+</div>
+
+<div class="skill-track">
+<div class="skill-fill" data-width="75%"></div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- PROJECTS -->
+<section id="projects" class="py-28">
+
+<div class="max-w-7xl mx-auto px-6 fade-up">
+
+<h2 class="text-5xl font-black mb-16">
+Featured Projects
+</h2>
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+<!-- PROJECT -->
+<div class="glass rounded-[30px] overflow-hidden project-card">
+
+<img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop&crop=center"
+class="w-full h-56 object-cover">
+
+<div class="p-7">
+
+<h3 class="text-2xl font-bold mb-4">
+Chess Marketplace Platform
+</h3>
+
+<p class="text-slate-400 leading-relaxed mb-6">
+
+A comprehensive e-commerce platform for chess enthusiasts featuring product listings, user authentication, shopping cart functionality, and secure payment processing.
+
+</p>
+
+<div class="flex flex-wrap gap-2 mb-6 text-xs">
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+Django
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+Python
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+E-commerce
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+PostgreSQL
+</span>
+
+</div>
+
+<div class="flex justify-between">
+
+<a href="https://github.com/osteen34581/chess-development/tree/main/marketplace_project"
+class="text-blue-400 font-semibold" target="_blank">
+GitHub
+</a>
+
+<a href="#"
+class="text-purple-400 font-semibold">
+Live Demo
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- PROJECT -->
+<div class="glass rounded-[30px] overflow-hidden project-card">
+
+<img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=400&fit=crop&crop=center"
+class="w-full h-56 object-cover">
+
+<div class="p-7">
+
+<h3 class="text-2xl font-bold mb-4">
+CS50 Web Development
+</h3>
+
+<p class="text-slate-400 leading-relaxed mb-6">
+
+Harvard CS50 Web Development course projects featuring HTML, CSS, JavaScript, Python Flask applications, and database integration with SQL.
+
+</p>
+
+<div class="flex flex-wrap gap-2 mb-6 text-xs">
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+HTML/CSS
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+JavaScript
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+Python
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+Flask
+</span>
+
+</div>
+
+<div class="flex justify-between">
+
+<a href="https://github.com/code50/201958286"
+class="text-blue-400 font-semibold" target="_blank">
+GitHub
+</a>
+
+<a href="#"
+class="text-purple-400 font-semibold">
+Live Demo
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- PROJECT -->
+<div class="glass rounded-[30px] overflow-hidden project-card">
+
+<img src="https://images.unsplash.com/photo-1529699211952-734e80c4d42b?w=600&h=400&fit=crop&crop=center"
+class="w-full h-56 object-cover">
+
+<div class="p-7">
+
+<h3 class="text-2xl font-bold mb-4">
+Chess Development Suite
+</h3>
+
+<p class="text-slate-400 leading-relaxed mb-6">
+
+Comprehensive chess development toolkit featuring game logic, AI algorithms, tournament management, player statistics, and interactive chess interfaces.
+
+</p>
+
+<div class="flex flex-wrap gap-2 mb-6 text-xs">
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+Python
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+AI/ML
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+Game Dev
+</span>
+
+<span class="bg-slate-800 px-3 py-1 rounded-full">
+Algorithms
+</span>
+
+</div>
+
+<div class="flex justify-between">
+
+<a href="https://github.com/osteen34581/chess-development1"
+class="text-blue-400 font-semibold" target="_blank">
+GitHub
+</a>
+
+<a href="#"
+class="text-purple-400 font-semibold">
+Live Demo
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- GITHUB -->
+<section id="github" class="py-28 bg-[#0b1120]">
+
+<div class="max-w-7xl mx-auto px-6 fade-up">
+
+<h2 class="text-5xl font-black mb-14">
+GitHub Dashboard
+</h2>
+
+<div class="grid md:grid-cols-2 gap-8 mb-12">
+
+<!-- MAIN STATS -->
+<div class="glass p-6 rounded-[25px]">
+<img src="https://github-readme-stats.vercel.app/api?username=osteen34581&show_icons=true&theme=tokyonight&hide_border=true&bg_color=0b1120&text_color=ffffff&title_color=3b82f6&icon_color=3b82f6" class="github-stats">
+</div>
+
+<!-- STREAK STATS -->
+<div class="glass p-6 rounded-[25px]">
+<img src="https://github-readme-streak-stats.herokuapp.com/?user=osteen34581&theme=tokyonight&hide_border=true&background=0b1120&stroke=3b82f6&ring=3b82f6&fire=3b82f6&currStreakLabel=3b82f6&sideLabels=3b82f6&dates=ffffff" class="github-stats">
+</div>
+
+</div>
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+<!-- MOST USED LANGUAGES -->
+<div class="glass p-6 rounded-[25px]">
+<img src="https://github-readme-stats.vercel.app/api/top-langs/?username=osteen34581&theme=tokyonight&hide_border=true&bg_color=0b1120&text_color=ffffff&title_color=3b82f6&layout=compact" class="github-stats">
+</div>
+
+<!-- GITHUB ACTIVITY -->
+<div class="glass p-6 rounded-[25px]">
+<h3 class="text-2xl font-bold mb-4 text-blue-400">Recent Activity</h3>
+<div class="space-y-3 text-slate-300">
+<div class="flex items-center gap-3">
+<i class="fas fa-code-branch text-green-400"></i>
+<span>Active contributor to open source projects</span>
+</div>
+<div class="flex items-center gap-3">
+<i class="fas fa-star text-yellow-400"></i>
+<span>Building innovative solutions</span>
+</div>
+<div class="flex items-center gap-3">
+<i class="fas fa-users text-purple-400"></i>
+<span>Collaborating with developers worldwide</span>
+</div>
+</div>
+</div>
+
+<!-- REPO STATS -->
+<div class="glass p-6 rounded-[25px]">
+<h3 class="text-2xl font-bold mb-4 text-blue-400">Repository Stats</h3>
+<div class="grid grid-cols-2 gap-4 text-center">
+<div>
+<h4 class="text-3xl font-black text-green-400">10+</h4>
+<p class="text-slate-400 text-sm">Projects</p>
+</div>
+<div>
+<h4 class="text-3xl font-black text-blue-400">50+</h4>
+<p class="text-slate-400 text-sm">Commits</p>
+</div>
+<div>
+<h4 class="text-3xl font-black text-purple-400">5+</h4>
+<p class="text-slate-400 text-sm">Languages</p>
+</div>
+<div>
+<h4 class="text-3xl font-black text-orange-400">2+</h4>
+<p class="text-slate-400 text-sm">Years Active</p>
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- GITHUB LINK -->
+<div class="text-center mt-12">
+<a href="https://github.com/osteen34581" target="_blank" class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-full hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+<i class="fab fa-github text-2xl"></i>
+Visit My GitHub Profile
+</a>
+</div>
+
+</div>
+
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="py-28">
+
+<div class="max-w-4xl mx-auto px-6 fade-up">
+
+<h2 class="text-5xl font-black mb-14">
+Let's Work Together
+</h2>
+
+<form id="contact-form" class="glass p-10 rounded-[30px] space-y-6">
+
+<input type="text" id="name" name="user_name" required
+placeholder="Your Name"
+class="w-full p-5 rounded-2xl bg-[#111827] border border-slate-700 outline-none focus:border-blue-400 transition-colors">
+
+<input type="email" id="email" name="user_email" required
+placeholder="Your Email"
+class="w-full p-5 rounded-2xl bg-[#111827] border border-slate-700 outline-none focus:border-blue-400 transition-colors">
+
+<textarea rows="6" id="message" name="message" required
+placeholder="Your Message"
+class="w-full p-5 rounded-2xl bg-[#111827] border border-slate-700 outline-none focus:border-blue-400 transition-colors resize-none"></textarea>
+
+<button type="submit" id="submit-btn"
+class="w-full py-5 rounded-2xl btn-main font-bold transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+<span id="btn-text">Send Message</span>
+</button>
+
+</form>
+
+<!-- Success/Error Messages -->
+<div id="success-message" class="mt-6 p-4 bg-green-500/20 border border-green-500/30 rounded-2xl text-green-400 text-center hidden">
+<i class="fas fa-check-circle mr-2"></i>
+Message sent successfully! I'll get back to you soon.
+</div>
+
+<div id="error-message" class="mt-6 p-4 bg-red-500/20 border border-red-500/30 rounded-2xl text-red-400 text-center hidden">
+<i class="fas fa-exclamation-circle mr-2"></i>
+Failed to send message. Please try again or contact me directly.
+</div>
+
+<p class="text-slate-500 mt-5 text-center">
+Usually replies within 24 hours.
+</p>
+
+</div>
+
+</section>
+
+<!-- FOOTER -->
+<footer class="py-10 border-t border-slate-800 text-center text-slate-500">
+
+© 2026 AUSTINE OLUOCH — Built with HTML, Tailwind CSS & JavaScript
+
+</footer>
+
+<script>
+
+/* FADE ANIMATION */
+const fadeItems=document.querySelectorAll('.fade-up');
+
+function reveal(){
+
+fadeItems.forEach(item=>{
+
+const top=item.getBoundingClientRect().top;
+
+if(top<window.innerHeight-100){
+item.classList.add('show');
+}
+
+});
+
+}
+
+window.addEventListener('scroll',reveal);
+reveal();
+
+/* SKILL ANIMATION */
+const bars=document.querySelectorAll('.skill-fill');
+
+function animateSkills(){
+
+bars.forEach(bar=>{
+
+const top=bar.getBoundingClientRect().top;
+
+if(top<window.innerHeight){
+bar.style.width=bar.dataset.width;
+}
+
+});
+
+}
+
+window.addEventListener('scroll',animateSkills);
+animateSkills();
+
+/* MOBILE MENU TOGGLE */
+const hamburger=document.getElementById('hamburger');
+const mobileNav=document.getElementById('mobileNav');
+
+hamburger.addEventListener('click',()=>{
+hamburger.classList.toggle('active');
+mobileNav.classList.toggle('active');
+});
+
+// Close menu when a link is clicked
+const navLinks=mobileNav.querySelectorAll('a');
+navLinks.forEach(link=>{
+link.addEventListener('click',()=>{
+hamburger.classList.remove('active');
+mobileNav.classList.remove('active');
+});
+});
+
+/* CONTACT FORM */
+/*
+To make the contact form work:
+1. Sign up at https://www.emailjs.com/
+2. Create an email service (Gmail, Outlook, etc.)
+3. Create an email template
+4. Replace the placeholders below with your actual IDs:
+   - YOUR_PUBLIC_KEY
+   - YOUR_SERVICE_ID
+   - YOUR_TEMPLATE_ID
+*/
+(function() {
+    // Initialize EmailJS
+    emailjs.init('YOUR_PUBLIC_KEY'); // Replace with your EmailJS public key
+
+    const contactForm = document.getElementById('contact-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const btnText = document.getElementById('btn-text');
+    const successMessage = document.getElementById('success-message');
+    const errorMessage = document.getElementById('error-message');
+
+    contactForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Show loading state
+        submitBtn.disabled = true;
+        btnText.textContent = 'Sending...';
+
+        // Hide previous messages
+        successMessage.classList.add('hidden');
+        errorMessage.classList.add('hidden');
+
+        // Prepare template parameters
+        const templateParams = {
+            from_name: document.getElementById('name').value,
+            from_email: document.getElementById('email').value,
+            message: document.getElementById('message').value,
+            to_email: 'austinelapi@gmail.com' // Your email address
+        };
+
+        // Send email using EmailJS
+        emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+            .then(function(response) {
+                console.log('SUCCESS!', response.status, response.text);
+                successMessage.classList.remove('hidden');
+                contactForm.reset();
+            }, function(error) {
+                console.log('FAILED...', error);
+                errorMessage.classList.remove('hidden');
+            })
+            .finally(function() {
+                // Reset button state
+                submitBtn.disabled = false;
+                btnText.textContent = 'Send Message';
+            });
+    });
+
+    // Form validation feedback
+    const inputs = contactForm.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.classList.add('border-red-400');
+                this.classList.remove('border-blue-400');
+            } else {
+                this.classList.remove('border-red-400');
+                this.classList.add('border-blue-400');
+            }
+        });
+    });
+})();
+
+</script>
+
+</body>
+</html>
