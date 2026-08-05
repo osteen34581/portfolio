@@ -1,0 +1,61 @@
+{% extends 'notes_base.html' %}
+{% block title %}Past Paper Q&A | Voice Notes{% endblock %}
+{% block content %}
+  <div class="resource-qa-page">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">VN</div>
+        <div class="brand-info">
+          <h1>Past Paper Review</h1>
+          <p>{{ resource.title }} — {{ resource.course|default:'General' }}</p>
+        </div>
+      </div>
+      <div class="nav-links">
+        <a href="{% url 'index' %}">Dashboard</a>
+      </div>
+    </header>
+
+    <section class="qa-grid">
+      <div class="panel">
+        <h3>Extracted questions</h3>
+        {% for item in questions %}
+          <div class="qa-question">
+            <strong>{{ item.question }}</strong>
+            <p>{{ item.content }}</p>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="panel">
+        <h3>Save an answer</h3>
+        <form method="post" class="resource-form">
+          {% csrf_token %}
+          <label>
+            Question text
+            <textarea name="question_text" rows="3" placeholder="Paste the question or summary here" required></textarea>
+          </label>
+          <label>
+            Your answer
+            <textarea name="answer_text" rows="6" placeholder="Write your answer or exam response" required></textarea>
+          </label>
+          <button type="submit">Save answer</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="answer-list">
+      <h3>Saved answers</h3>
+      {% if answers %}
+        {% for answer in answers %}
+          <div class="answer-card">
+            <strong>{{ answer.question_text|truncatewords:15 }}</strong>
+            <span>{{ answer.created|date:'M d, Y H:i' }}</span>
+            <p>{{ answer.answer_text|linebreaksbr }}</p>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="answer-card empty">No saved answers yet. Add one to keep your revision notes organized.</div>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

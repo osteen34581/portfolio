@@ -1,0 +1,267 @@
+{% extends 'notes_base.html' %}
+{% block title %}Voice Notes{% endblock %}
+{% block content %}
+      <header class="header">
+        <div class="brand">
+          <div class="brand-icon">VN</div>
+          <div class="brand-info">
+            <h1>Voice Notes</h1>
+            <p>Study notes powered by voice and AI.</p>
+          </div>
+        </div>
+        <div class="nav-links">
+          {% if user.is_authenticated %}
+            <span>Signed in as {{ user.username }}</span>
+            <a href="{% url 'logout' %}">Logout</a>
+          {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'signup' %}">Sign Up</a>
+          {% endif %}
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <small>Study smarter with voice notes</small>
+          <h2>Capture lectures, summaries, and ideas faster.</h2>
+          <p>Organize audio notes by course, search transcripts, and export study material instantly in text or PDF.</p>
+        </div>
+        <div class="card">
+          <div class="panel">
+            <h3>Efficiency gain</h3>
+            <p class="value">+240%</p>
+            <p class="status-bar">Track study sessions and stay focused on important material.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard">
+        <div class="controls">
+          <form method="get" style="grid-template-columns: 1fr 1fr auto; align-items: end;">
+            <input type="search" name="q" placeholder="Search notes..." value="{{ query }}" />
+            <input type="text" name="course" placeholder="Course or subject" value="{{ course_filter }}" />
+            <button type="submit">Filter</button>
+          </form>
+
+          <div class="server-controls">
+            <input id="courseInput" type="text" placeholder="Course or subject" />
+            <button type="button" id="recordBtn">Start Recording</button>
+            <button type="button" id="stopBtn" disabled>Stop & Upload</button>
+          </div>
+
+          <div class="client-controls" id="clientControls" style="display:none">
+            <button type="button" id="liveBtn">Start Live Transcription</button>
+            <button type="button" id="stopLiveBtn" disabled>Stop Live</button>
+          </div>
+        </div>
+
+        <div class="status-bar" id="status">Ready to capture your next note.</div>
+
+        <div class="notes-list" id="notes">
+          {% for note in notes %}
+          <div class="note">
+            <strong>{{ note.course|default:'General' }}</strong>
+            <span>{{ note.created }}</span>
+            <p>{{ note.text }}</p>
+            <div class="note-actions">
+              <a href="{% url 'export_text' note.id %}">Download TXT</a>
+              <a href="{% url 'export_pdf' note.id %}">Download PDF</a>
+            </div>
+          </div>
+          {% empty %}
+          <div class="note">No notes yet. Start recording or sign in to save your first note.</div>
+          {% endfor %}
+        </div>
+
+        <section class="resource-hub">
+          <div class="resource-grid">
+            <div class="panel">
+              <h3>Student Notes Library</h3>
+              <p>Save lecture summaries, revision notes, and study resources for every course.</p>
+            </div>
+            <div class="panel resource-form-card">
+              <h3>Add a note or past paper</h3>
+              <form method="post" action="{% url 'add_resource' %}" enctype="multipart/form-data" class="resource-form">
+                {% csrf_token %}
+                <input type="text" name="title" placeholder="Title" required />
+                <input type="text" name="course" placeholder="Course or subject" />
+                <select name="resource_type">
+                  <option value="note">Student Note</option>
+                  <option value="paper">Past Paper</option>
+                </select>
+                <input type="text" name="year" placeholder="Year (past paper only)" />
+                <input type="file" name="resource_file" accept=".txt,.pdf" />
+                <textarea name="description" rows="2" placeholder="Short description"></textarea>
+                <textarea name="content" rows="4" placeholder="Note or past paper content"></textarea>
+                <button type="submit">Save resource</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="resource-lists">
+            <div class="resource-section">
+              <div class="section-header">
+                <h3>Student Notes</h3>
+                <span>Ready for revision and summaries.</span>
+              </div>
+              {% if student_notes %}
+                {% for resource in student_notes %}
+                  <div class="resource-item">
+                    <div>
+                      <strong>{{ resource.title }}</strong>
+                      <span>{{ resource.course|default:'General' }} • {{ resource.created|date:'M d, Y' }}</span>
+                      <p>{{ resource.description|default:resource.content|truncatewords:20 }}</p>
+                    </div>
+                    <a href="{% url 'download_resource' resource.id %}">Download</a>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="resource-item empty">No student notes yet. Add one above to get started.</div>
+              {% endif %}
+            </div>
+
+            <div class="resource-section">
+              <div class="section-header">
+                <h3>Past Papers</h3>
+                <span>Keep exam practice close and review previous questions.</span>
+              </div>
+              {% if past_papers %}
+                {% for resource in past_papers %}
+                  <div class="resource-item">
+                    <div>
+                      <strong>{{ resource.title }}</strong>
+                      <span>{{ resource.course|default:'General' }} • {{ resource.year|default:'Year unknown' }}</span>
+                      <p>{{ resource.description|default:resource.content|truncatewords:20 }}</p>
+                    </div>
+                    <div class="resource-item-actions">
+                      <a href="{% url 'download_resource' resource.id %}">Download</a>
+                      <a class="secondary-link" href="{% url 'resource_qa' resource.id %}">Review Q&A</a>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="resource-item empty">No past papers available yet. Add one above to grow the collection.</div>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <footer class="footer">
+        <div>Student study assistant • organized note capture</div>
+        <div>2026</div>
+      </footer>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+      let mediaRecorder, chunks = [];
+      const recordBtn = document.getElementById('recordBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const status = document.getElementById('status');
+
+      recordBtn.onclick = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => chunks.push(e.data);
+        mediaRecorder.start();
+        recordBtn.disabled = true;
+        stopBtn.disabled = false;
+        status.textContent = ' Recording...';
+      };
+
+      stopBtn.onclick = async () => {
+        mediaRecorder.stop();
+        stopBtn.disabled = true;
+        status.textContent = ' Uploading...';
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          const fd = new FormData();
+          fd.append('audio', blob, 'note.webm');
+          const course = document.getElementById('courseInput').value;
+          const res = await fetch('transcribe/', { method: 'POST', body: fd });
+          const json = await res.json();
+          if (res.ok) {
+            const notes = document.getElementById('notes');
+            const div = document.createElement('div');
+            div.className = 'note';
+            div.innerHTML = `<strong>${course || 'General'}</strong><span>${new Date().toLocaleString()}</span><p>${json.text}</p><div class="note-actions"><a href="#">Download TXT</a><a href="#">Download PDF</a></div>`;
+            notes.prepend(div);
+            status.textContent = ' Uploaded';
+          } else {
+            status.textContent = ' Error: ' + (json.error || JSON.stringify(json));
+          }
+          chunks = [];
+          recordBtn.disabled = false;
+        };
+      };
+
+      const liveBtn = document.getElementById('liveBtn');
+      const stopLiveBtn = document.getElementById('stopLiveBtn');
+
+      function showClientControls() {
+        document.getElementById('clientControls').style.display = '';
+        document.getElementById('serverControls').style.display = 'none';
+      }
+
+      if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+        showClientControls();
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognizer = null;
+        let accumulated = '';
+
+        liveBtn.onclick = () => {
+          recognizer = new SpeechRec();
+          recognizer.continuous = true;
+          recognizer.interimResults = true;
+          recognizer.lang = 'en-US';
+          recognizer.onresult = (event) => {
+            let interim = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              const res = event.results[i];
+              if (res.isFinal) accumulated += res[0].transcript + ' ';
+              else interim += res[0].transcript;
+            }
+            status.textContent = accumulated + interim;
+          };
+          recognizer.onerror = (e) => { status.textContent = 'Error: ' + e.error; };
+          recognizer.start();
+          liveBtn.disabled = true;
+          stopLiveBtn.disabled = false;
+        };
+
+        stopLiveBtn.onclick = async () => {
+          if (!recognizer) return;
+          recognizer.stop();
+          stopLiveBtn.disabled = true;
+          status.textContent = 'Saving...';
+          const course = document.getElementById('courseInput').value;
+          try {
+            const res = await fetch('save_text/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: accumulated, course })
+            });
+            const json = await res.json();
+            if (res.ok) {
+              const notes = document.getElementById('notes');
+              const div = document.createElement('div');
+              div.className = 'note';
+              div.innerHTML = `<strong>${json.course || 'General'}</strong><span>${new Date().toLocaleString()}</span><p>${json.text}</p><div class="note-actions"><a href="#">Download TXT</a><a href="#">Download PDF</a></div>`;
+              notes.prepend(div);
+              status.textContent = 'Saved';
+            } else {
+              status.textContent = 'Error saving: ' + (json.error || JSON.stringify(json));
+            }
+          } catch (err) {
+            status.textContent = 'Network error: ' + err;
+          }
+          accumulated = '';
+          liveBtn.disabled = false;
+        };
+      } else {
+        document.getElementById('clientControls').style.display = 'none';
+        document.getElementById('serverControls').style.display = '';
+      }
+    </script>
+{% endblock %}

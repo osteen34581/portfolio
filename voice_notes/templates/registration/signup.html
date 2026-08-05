@@ -1,0 +1,15 @@
+{% extends 'notes_base.html' %}
+{% block title %}Sign Up | Voice Notes{% endblock %}
+{% block content %}
+  <div class="auth-page">
+    <div class="auth-card">
+      <h1>Create Account</h1>
+      <form method="post" class="auth-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Create account</button>
+      </form>
+      <p class="auth-footer">Already have an account? <a href="{% url 'login' %}">Login</a></p>
+    </div>
+  </div>
+{% endblock %}
