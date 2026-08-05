@@ -36,6 +36,7 @@ class StudyResource(models.Model):
     )
     title = models.CharField(max_length=150)
     course = models.CharField(max_length=100, blank=True)
+    exam_board = models.CharField(max_length=100, blank=True)
     description = models.TextField(blank=True)
     content = models.TextField(blank=True)
     file = models.FileField(upload_to='past_papers/', null=True, blank=True)

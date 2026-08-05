@@ -1,6 +1,8 @@
+import io
 import json
 import re
 import tempfile
+import zipfile
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.db import models
@@ -16,6 +18,10 @@ from .models import Note, StudyResource, ResourceAnswer
 def index(request):
     course_filter = request.GET.get('course', '').strip()
     query = request.GET.get('q', '').strip()
+    resource_year_filter = request.GET.get('resource_year', '').strip()
+    exam_board_filter = request.GET.get('exam_board', '').strip()
+    resource_type_filter = request.GET.get('resource_type', '').strip()
+
     notes = Note.objects.order_by('-created')
     if request.user.is_authenticated:
         notes = notes.filter(owner=request.user)
@@ -31,6 +37,21 @@ def index(request):
     else:
         resources = resources.filter(owner__isnull=True)
 
+    if course_filter:
+        resources = resources.filter(course__icontains=course_filter)
+    if query:
+        resources = resources.filter(
+            models.Q(title__icontains=query) |
+            models.Q(description__icontains=query) |
+            models.Q(content__icontains=query)
+        )
+    if resource_type_filter in [StudyResource.STUDENT_NOTE, StudyResource.PAST_PAPER]:
+        resources = resources.filter(resource_type=resource_type_filter)
+    if resource_year_filter:
+        resources = resources.filter(year=resource_year_filter)
+    if exam_board_filter:
+        resources = resources.filter(exam_board__icontains=exam_board_filter)
+
     student_notes = resources.filter(resource_type=StudyResource.STUDENT_NOTE)[:8]
     past_papers = resources.filter(resource_type=StudyResource.PAST_PAPER)[:8]
 
@@ -38,6 +59,9 @@ def index(request):
         'notes': notes,
         'course_filter': course_filter,
         'query': query,
+        'resource_year_filter': resource_year_filter,
+        'exam_board_filter': exam_board_filter,
+        'resource_type_filter': resource_type_filter,
         'student_notes': student_notes,
         'past_papers': past_papers,
     })
@@ -100,6 +124,7 @@ def add_resource(request):
 
     title = request.POST.get('title', '').strip()
     course = request.POST.get('course', '').strip()
+    exam_board = request.POST.get('exam_board', '').strip()
     description = request.POST.get('description', '').strip()
     content = request.POST.get('content', '').strip()
     resource_type = request.POST.get('resource_type', StudyResource.STUDENT_NOTE)
@@ -135,6 +160,7 @@ def add_resource(request):
             owner=owner,
             title=title,
             course=course,
+            exam_board=exam_board,
             description=description,
             content=content or file_text,
             file=file_instance,
@@ -157,6 +183,62 @@ def download_resource(request, resource_id):
     filename = f"{resource.resource_type}_{resource.id}.txt"
     response = HttpResponse(resource.content, content_type='text/plain')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+def export_resource_markdown(request, resource_id):
+    resource = StudyResource.objects.filter(id=resource_id).first()
+    if not resource or (resource.owner and resource.owner != request.user):
+        return HttpResponseForbidden('Access denied')
+
+    content_lines = [f"# {resource.title}"]
+    if resource.course:
+        content_lines.append(f"**Course:** {resource.course}")
+    if resource.exam_board:
+        content_lines.append(f"**Exam Board:** {resource.exam_board}")
+    if resource.year:
+        content_lines.append(f"**Year:** {resource.year}")
+    content_lines.append('')
+    if resource.description:
+        content_lines.append(f"**Description:** {resource.description}")
+        content_lines.append('')
+    if resource.content:
+        content_lines.append(resource.content)
+    markdown = '\n'.join(content_lines)
+    filename = f"resource_{resource.id}.md"
+    response = HttpResponse(markdown, content_type='text/markdown')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+def export_resource_zip(request, resource_id):
+    resource = StudyResource.objects.filter(id=resource_id).first()
+    if not resource or (resource.owner and resource.owner != request.user):
+        return HttpResponseForbidden('Access denied')
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
+        metadata = [f"Title: {resource.title}",
+                    f"Course: {resource.course or 'N/A'}",
+                    f"Exam Board: {resource.exam_board or 'N/A'}",
+                    f"Year: {resource.year or 'N/A'}",
+                    f"Type: {resource.get_resource_type_display()}",
+                    '']
+        if resource.description:
+            metadata.append(f"Description: {resource.description}")
+            metadata.append('')
+        if resource.content:
+            archive.writestr('resource.md', '\n'.join(['# ' + resource.title, ''] + metadata + [resource.content]))
+        else:
+            archive.writestr('resource.md', '\n'.join(['# ' + resource.title, ''] + metadata))
+        if resource.file:
+            resource.file.open('rb')
+            archive.writestr(resource.file.name.split('/')[-1], resource.file.read())
+            resource.file.close()
+
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/zip')
+    response['Content-Disposition'] = f'attachment; filename="resource_{resource.id}.zip"'
     return response
 
 

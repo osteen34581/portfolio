@@ -37,9 +37,10 @@
 
       <section class="dashboard">
         <div class="controls">
-          <form method="get" style="grid-template-columns: 1fr 1fr auto; align-items: end;">
-            <input type="search" name="q" placeholder="Search notes..." value="{{ query }}" />
+          <form method="get" style="grid-template-columns: repeat(3, minmax(160px, 1fr)) 120px; align-items: end; gap: 0.75rem;">
+            <input type="search" name="q" placeholder="Search resources..." value="{{ query }}" />
             <input type="text" name="course" placeholder="Course or subject" value="{{ course_filter }}" />
+            <input type="text" name="exam_board" placeholder="Exam board" value="{{ exam_board_filter }}" />
             <button type="submit">Filter</button>
           </form>
 
@@ -85,6 +86,7 @@
                 {% csrf_token %}
                 <input type="text" name="title" placeholder="Title" required />
                 <input type="text" name="course" placeholder="Course or subject" />
+                <input type="text" name="exam_board" placeholder="Exam board / syllabus" />
                 <select name="resource_type">
                   <option value="note">Student Note</option>
                   <option value="paper">Past Paper</option>
@@ -135,6 +137,8 @@
                     </div>
                     <div class="resource-item-actions">
                       <a href="{% url 'download_resource' resource.id %}">Download</a>
+                      <a class="secondary-link" href="{% url 'export_resource_markdown' resource.id %}">Markdown</a>
+                      <a class="secondary-link" href="{% url 'export_resource_zip' resource.id %}">ZIP</a>
                       <a class="secondary-link" href="{% url 'resource_qa' resource.id %}">Review Q&A</a>
                     </div>
                   </div>
