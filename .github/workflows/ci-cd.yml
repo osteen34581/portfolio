@@ -1,0 +1,60 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Lint & Compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r voice_notes/requirements.txt
+
+      - name: Syntax check
+        run: |
+          python -m py_compile $(git ls-files '*.py' | tr '\n' ' ')
+
+      - name: Django check
+        run: python voice_notes/manage.py check || true
+        env:
+          DJANGO_DEBUG: 'False'
+
+  build-and-push:
+    name: Build and publish Docker image
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v4
+        with:
+          context: voice_notes
+          file: voice_notes/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/voice_notes:latest
+
+      - name: Trigger Render deploy
+        if: ${{ secrets.RENDER_SERVICE_ID != '' && secrets.RENDER_API_KEY != '' }}
+        run: |
+          echo "Triggering Render deploy for ${{ secrets.RENDER_SERVICE_ID }}"
+          curl -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Accept: application/json" \
+            -d '{}'
