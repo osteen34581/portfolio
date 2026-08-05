@@ -2,3 +2,5 @@ Django>=4.0
 whisper
 reportlab
 PyPDF2
+gunicorn
+whitenoise
