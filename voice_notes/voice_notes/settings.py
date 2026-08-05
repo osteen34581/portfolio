@@ -3,7 +3,8 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'replace-this-in-production'
+# Read secret key from environment in production
+SECRET_KEY = os.getenv('SECRET_KEY', 'replace-this-in-production')
 
 # Use environment variable to toggle debug in production; default to True for now
 DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
