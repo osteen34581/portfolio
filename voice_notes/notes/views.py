@@ -1,5 +1,6 @@
 import io
 import json
+import os
 import re
 import tempfile
 import zipfile
@@ -261,9 +262,31 @@ def transcribe(request):
             tmp.write(chunk)
         tmp.flush()
 
-        # Try to use whisper if available
+        # Make sure ffmpeg is available for whisper. imageio-ffmpeg provides a binary
+        # when ffmpeg is not installed globally.
+        try:
+            import imageio_ffmpeg
+            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            os.environ.setdefault('FFMPEG_BINARY', ffmpeg_exe)
+            ffmpeg_dir = os.path.dirname(ffmpeg_exe)
+
+            if os.path.basename(ffmpeg_exe) != 'ffmpeg':
+                symlink_dir = tempfile.mkdtemp()
+                link_path = os.path.join(symlink_dir, 'ffmpeg')
+                try:
+                    os.symlink(ffmpeg_exe, link_path)
+                except FileExistsError:
+                    pass
+                os.environ['PATH'] = symlink_dir + os.pathsep + os.environ.get('PATH', '')
+            else:
+                os.environ['PATH'] = ffmpeg_dir + os.pathsep + os.environ.get('PATH', '')
+        except Exception:
+            pass
+
         try:
             import whisper
+            if not hasattr(whisper, 'load_model'):
+                raise ImportError('openai-whisper package not installed; found wrong whisper package')
 
             model = whisper.load_model('small')
             result = model.transcribe(tmp.name)

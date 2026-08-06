@@ -186,6 +186,7 @@
           const fd = new FormData();
           fd.append('audio', blob, 'note.webm');
           const course = document.getElementById('courseInput').value;
+          fd.append('course', course);
           const res = await fetch('transcribe/', { method: 'POST', body: fd });
           const json = await res.json();
           if (res.ok) {
@@ -194,9 +195,10 @@
             div.className = 'note';
             div.innerHTML = `<strong>${course || 'General'}</strong><span>${new Date().toLocaleString()}</span><p>${json.text}</p><div class="note-actions"><a href="#">Download TXT</a><a href="#">Download PDF</a></div>`;
             notes.prepend(div);
-            status.textContent = ' Uploaded';
+            status.textContent = 'Uploaded';
           } else {
-            status.textContent = ' Error: ' + (json.error || JSON.stringify(json));
+            const details = json.details ? ` (${json.details})` : '';
+            status.textContent = `Error: ${json.error || JSON.stringify(json)}${details}`;
           }
           chunks = [];
           recordBtn.disabled = false;
