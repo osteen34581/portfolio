@@ -167,6 +167,21 @@
       const stopBtn = document.getElementById('stopBtn');
       const status = document.getElementById('status');
 
+      function addNoteCard(noteData) {
+        const notes = document.getElementById('notes');
+        const div = document.createElement('div');
+        div.className = 'note';
+        div.innerHTML = `
+          <strong>${noteData.course || 'General'}</strong>
+          <span>${new Date().toLocaleString()}</span>
+          <p>${noteData.text || 'No transcription text available.'}</p>
+          <div class="note-actions">
+            <a href="/export/txt/${noteData.id}/">Download TXT</a>
+            <a href="/export/pdf/${noteData.id}/">Download PDF</a>
+          </div>`;
+        notes.prepend(div);
+      }
+
       recordBtn.onclick = async () => {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
@@ -190,11 +205,7 @@
           const res = await fetch('transcribe/', { method: 'POST', body: fd });
           const json = await res.json();
           if (res.ok) {
-            const notes = document.getElementById('notes');
-            const div = document.createElement('div');
-            div.className = 'note';
-            div.innerHTML = `<strong>${course || 'General'}</strong><span>${new Date().toLocaleString()}</span><p>${json.text}</p><div class="note-actions"><a href="#">Download TXT</a><a href="#">Download PDF</a></div>`;
-            notes.prepend(div);
+            addNoteCard({ id: json.id, course, text: json.text });
             status.textContent = 'Uploaded';
           } else {
             const details = json.details ? ` (${json.details})` : '';
