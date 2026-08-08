@@ -373,8 +373,11 @@ def transcribe(request):
     if not audio:
         return JsonResponse({'error': 'No audio file'}, status=400)
 
-    # save to temp file
-    with tempfile.NamedTemporaryFile(suffix='.webm') as tmp:
+    # save to temp file, preserve original extension so ffmpeg/whisper can detect format
+    orig_name = getattr(audio, 'name', '') or ''
+    _, ext = os.path.splitext(orig_name)
+    suffix = ext if ext else '.webm'
+    with tempfile.NamedTemporaryFile(suffix=suffix) as tmp:
         for chunk in audio.chunks():
             tmp.write(chunk)
         tmp.flush()
