@@ -72,6 +72,20 @@
           <button type="button" id="statusClear" class="status-clear" aria-label="Dismiss status">×</button>
         </div>
 
+        <!-- Save confirmation modal -->
+        <div id="saveModal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); align-items:center; justify-content:center;">
+          <div style="background:#fff; padding:1rem; width:min(720px,95%); max-height:80vh; overflow:auto; border-radius:6px;">
+            <h3>Save transcription?</h3>
+            <label>Title:<br/><input id="modalTitle" type="text" style="width:100%"/></label>
+            <label>Course:<br/><input id="modalCourse" type="text" style="width:100%"/></label>
+            <label>Transcription preview:<br/><textarea id="previewText" rows="10" style="width:100%"></textarea></label>
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:0.5rem;">
+              <button id="modalDiscard" type="button">Discard</button>
+              <button id="modalSave" type="button">Save Note</button>
+            </div>
+          </div>
+        </div>
+
         <div class="notes-list" id="notes">
           {% for note in notes %}
           <div class="note">
@@ -238,7 +252,7 @@
         mediaRecorder.stop();
         stopBtn.disabled = true;
         showStatus('Uploading...', 'info');
-        mediaRecorder.onstop = async () => {
+          mediaRecorder.onstop = async () => {
           const blob = new Blob(chunks, { type: 'audio/webm' });
           const fd = new FormData();
           fd.append('audio', blob, 'note.webm');
@@ -249,14 +263,54 @@
           const res = await fetch('transcribe/', { method: 'POST', body: fd });
           const json = await res.json();
           if (res.ok) {
-            addNoteCard({ id: json.id, course, title: json.title, text: json.text });
-            showStatus('Voice note uploaded and converted successfully.', 'success');
+            // Show modal asking whether to save the transcription
+            document.getElementById('modalTitle').value = json.title || title || '';
+            document.getElementById('modalCourse').value = json.course || course || '';
+            document.getElementById('previewText').value = json.text || '';
+            document.getElementById('saveModal').style.display = 'flex';
+
+            const discardBtn = document.getElementById('modalDiscard');
+            const saveBtn = document.getElementById('modalSave');
+
+            function closeModal() {
+              document.getElementById('saveModal').style.display = 'none';
+              recordBtn.disabled = false;
+              chunks = [];
+            }
+
+            discardBtn.onclick = () => {
+              closeModal();
+              showStatus('Transcription discarded.', 'info');
+            };
+
+            saveBtn.onclick = async () => {
+              const t = document.getElementById('previewText').value;
+              const c = document.getElementById('modalCourse').value;
+              const ti = document.getElementById('modalTitle').value;
+              try {
+                const r = await fetch('save_text/', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ text: t, course: c, title: ti })
+                });
+                const saved = await r.json();
+                if (r.ok) {
+                  addNoteCard({ id: saved.id, course: saved.course, title: saved.title, text: saved.text });
+                  showStatus('Note saved.', 'success');
+                } else {
+                  showStatus('Save failed: ' + (saved.error || JSON.stringify(saved)), 'error');
+                }
+              } catch (err) {
+                showStatus('Save error: ' + err, 'error');
+              }
+              closeModal();
+            };
           } else {
             const details = json.details ? ` (${json.details})` : '';
             showStatus(`Transcription error: ${json.error || JSON.stringify(json)}${details}`, 'error');
+            recordBtn.disabled = false;
+            chunks = [];
           }
-          chunks = [];
-          recordBtn.disabled = false;
         };
       };
 

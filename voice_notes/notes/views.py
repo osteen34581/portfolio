@@ -443,18 +443,12 @@ def transcribe(request):
             tb = traceback.format_exc()
             return JsonResponse({'error': 'Transcription backend unavailable', 'details': str(e), 'traceback': tb}, status=500)
 
+    # Do not persist automatically: return the transcribed text and metadata
+    # Let the client ask the user whether to save; the client can then POST
+    # to the existing `save_text/` endpoint to create a Note.
     course = request.POST.get('course', '').strip()
     title = request.POST.get('title', '').strip() or f"Voice note{(' - ' + course) if course else ''}"
-    owner = request.user if request.user.is_authenticated else None
-    note = Note.objects.create(
-        owner=owner,
-        course=course,
-        title=title,
-        text=text,
-        source_filename=getattr(audio, 'name', 'recording.webm'),
-        transcription_source='whisper',
-    )
-    return JsonResponse({'text': text, 'id': note.id, 'course': course, 'title': title})
+    return JsonResponse({'text': text, 'course': course, 'title': title})
 
 
 def export_text(request, note_id):
