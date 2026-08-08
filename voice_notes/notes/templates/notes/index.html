@@ -271,6 +271,13 @@
 
             const discardBtn = document.getElementById('modalDiscard');
             const saveBtn = document.getElementById('modalSave');
+            const previewEl = document.getElementById('previewText');
+
+            function updateSaveState() {
+              saveBtn.disabled = !previewEl.value || !previewEl.value.trim();
+            }
+            updateSaveState();
+            previewEl.addEventListener('input', updateSaveState);
 
             function closeModal() {
               document.getElementById('saveModal').style.display = 'none';
@@ -287,6 +294,10 @@
               const t = document.getElementById('previewText').value;
               const c = document.getElementById('modalCourse').value;
               const ti = document.getElementById('modalTitle').value;
+              if (!t || !t.trim()) {
+                showStatus('Cannot save empty transcription.', 'error');
+                return;
+              }
               try {
                 const r = await fetch('save_text/', {
                   method: 'POST',
