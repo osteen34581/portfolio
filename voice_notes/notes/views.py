@@ -405,12 +405,40 @@ def transcribe(request):
 
         try:
             import whisper
+            import subprocess
             if not hasattr(whisper, 'load_model'):
                 raise ImportError('openai-whisper package not installed; found wrong whisper package')
 
             model = whisper.load_model('small')
-            result = model.transcribe(tmp.name)
+
+            transcribe_path = tmp.name
+            # If the uploaded file isn't WAV, try an explicit transcode to WAV
+            if suffix.lower() not in ('.wav', '.wave'):
+                try:
+                    wav_tmp = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
+                    wav_tmp.close()
+                    ffmpeg_cmd = None
+                    try:
+                        import imageio_ffmpeg
+                        ffmpeg_cmd = imageio_ffmpeg.get_ffmpeg_exe()
+                    except Exception:
+                        ffmpeg_cmd = None
+
+                    if ffmpeg_cmd:
+                        subprocess.run([ffmpeg_cmd, '-y', '-i', tmp.name, wav_tmp.name], check=True)
+                        transcribe_path = wav_tmp.name
+                except Exception:
+                    # if transcode fails, fall back to original file
+                    transcribe_path = tmp.name
+
+            result = model.transcribe(transcribe_path)
             text = result.get('text', '').strip()
+            # cleanup possible wav_tmp
+            try:
+                if 'wav_tmp' in locals() and os.path.exists(wav_tmp.name):
+                    os.unlink(wav_tmp.name)
+            except Exception:
+                pass
         except Exception as e:
             tb = traceback.format_exc()
             return JsonResponse({'error': 'Transcription backend unavailable', 'details': str(e), 'traceback': tb}, status=500)
