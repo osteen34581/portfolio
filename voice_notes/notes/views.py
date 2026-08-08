@@ -595,4 +595,42 @@ def upload_audio(request):
         except Exception as e:
             return JsonResponse({'error': 'Failed to queue transcription', 'details': str(e)}, status=500)
 
-    return JsonResponse({'id': note.id, 'message': 'queued'})
+    return JsonResponse({'id': note.id, 'message': 'queued', 'text': note.text, 'title': note.title, 'course': note.course})
+
+
+def update_note(request, note_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    note = Note.objects.filter(id=note_id).first()
+    if not note:
+        return JsonResponse({'error': 'Note not found'}, status=404)
+    # only owner may modify
+    if note.owner and request.user != note.owner:
+        return HttpResponseForbidden('Access denied')
+
+    text = (payload.get('text') or '').strip()
+    title = (payload.get('title') or '').strip()
+    course = (payload.get('course') or '').strip()
+
+    if text:
+        note.text = text
+    if title:
+        note.title = title
+    if course:
+        note.course = course
+    note.transcription_source = 'user_saved'
+    note.save()
+    return JsonResponse({'id': note.id, 'text': note.text, 'title': note.title, 'course': note.course})
+
+
+def note_status(request, note_id):
+    note = Note.objects.filter(id=note_id).first()
+    if not note:
+        return JsonResponse({'error': 'Note not found'}, status=404)
+    return JsonResponse({'id': note.id, 'status': note.transcription_source, 'text': note.text or ''})

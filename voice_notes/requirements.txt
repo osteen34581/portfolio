@@ -1,5 +1,6 @@
 Django>=4.0
-whisper
+openai-whisper
+imageio-ffmpeg
 reportlab
 PyPDF2
 gunicorn

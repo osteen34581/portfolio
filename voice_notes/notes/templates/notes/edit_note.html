@@ -1,0 +1,17 @@
+{% extends 'notes_base.html' %}
+{% block title %}Edit Note | Voice Notes{% endblock %}
+{% block content %}
+  <div class="auth-page">
+    <div class="auth-card">
+      <h1>Edit Note</h1>
+      <form method="post" class="resource-form">
+        {% csrf_token %}
+        <input type="text" name="title" value="{{ note.title }}" placeholder="Title" />
+        <input type="text" name="course" value="{{ note.course }}" placeholder="Course or subject" />
+        <textarea name="text" rows="8" placeholder="Note content">{{ note.text }}</textarea>
+        <button type="submit">Save changes</button>
+      </form>
+      <p><a href="{% url 'index' %}">Back to dashboard</a></p>
+    </div>
+  </div>
+{% endblock %}

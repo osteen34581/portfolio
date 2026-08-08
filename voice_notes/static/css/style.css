@@ -248,6 +248,43 @@ a:hover {
   font-size: 0.95rem;
 }
 
+.status-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 20px;
+  margin-top: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.status-banner.success {
+  background: rgba(63, 125, 255, 0.15);
+  border-color: rgba(63, 125, 255, 0.3);
+}
+
+.status-banner.error {
+  background: rgba(255, 111, 111, 0.15);
+  border-color: rgba(255, 111, 111, 0.3);
+}
+
+.status-banner.info {
+  background: rgba(139, 168, 255, 0.12);
+  border-color: rgba(139, 168, 255, 0.3);
+}
+
+.status-clear {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+}
+
 .footer {
   margin-top: 3rem;
   color: var(--muted);
@@ -371,6 +408,23 @@ a:hover {
   display: grid;
   gap: 0.5rem;
   align-items: center;
+}
+
+.note-actions a {
+  color: var(--accent);
+}
+
+.note-actions a.danger-link {
+  color: var(--danger);
+}
+
+.delete-button {
+  background: linear-gradient(135deg, #ff6f6f, #ff9a9a);
+  border: none;
+  border-radius: 16px;
+  color: white;
+  cursor: pointer;
+  padding: 0.95rem 1rem;
 }
 
 .secondary-link {

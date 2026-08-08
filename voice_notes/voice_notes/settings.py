@@ -91,13 +91,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'voice_notes.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 AUTH_PASSWORD_VALIDATORS = []
 
 LOGIN_REDIRECT_URL = '/'

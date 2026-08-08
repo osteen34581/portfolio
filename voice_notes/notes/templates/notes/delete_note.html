@@ -1,0 +1,19 @@
+{% extends 'notes_base.html' %}
+{% block title %}Delete Note | Voice Notes{% endblock %}
+{% block content %}
+  <div class="auth-page">
+    <div class="auth-card">
+      <h1>Delete Note</h1>
+      <p>Are you sure you want to delete this note?</p>
+      <div class="note">
+        <strong>{{ note.title|default:note.course|default:'General' }}</strong>
+        <p>{{ note.text|truncatewords:30 }}</p>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="delete-button">Delete note</button>
+        <a href="{% url 'index' %}">Cancel</a>
+      </form>
+    </div>
+  </div>
+{% endblock %}
