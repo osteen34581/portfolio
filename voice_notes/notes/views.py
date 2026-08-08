@@ -113,14 +113,22 @@ def assistant_api(request):
         return sum(t.count(tok) for tok in tokens)
 
     note_scores = []
-    for n in Note.objects.filter(models.Q(owner__isnull=True) | models.Q(owner=request.user)).order_by('-created'):
+    if request.user.is_authenticated:
+        note_qs = Note.objects.filter(models.Q(owner__isnull=True) | models.Q(owner=request.user)).order_by('-created')
+    else:
+        note_qs = Note.objects.filter(owner__isnull=True).order_by('-created')
+    for n in note_qs:
         s = score_text(n.title or '') + score_text(n.text or '')
         if s:
             note_scores.append((s, n))
     note_scores.sort(key=lambda x: -x[0])
 
     resource_scores = []
-    for r in StudyResource.objects.filter(models.Q(owner__isnull=True) | models.Q(owner=request.user)).order_by('-created'):
+    if request.user.is_authenticated:
+        resource_qs = StudyResource.objects.filter(models.Q(owner__isnull=True) | models.Q(owner=request.user)).order_by('-created')
+    else:
+        resource_qs = StudyResource.objects.filter(owner__isnull=True).order_by('-created')
+    for r in resource_qs:
         s = score_text(r.title or '') + score_text(r.description or '') + score_text(r.content or '')
         if s:
             resource_scores.append((s, r))
