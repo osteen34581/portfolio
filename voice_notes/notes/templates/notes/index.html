@@ -275,7 +275,7 @@
           fd.append('course', course);
           fd.append('title', title);
           // Use XMLHttpRequest to provide upload progress feedback and smaller payloads
-          const uploadUrl = 'transcribe/';
+          const uploadUrl = 'upload_audio/';
           const xhr = new XMLHttpRequest();
           xhr.open('POST', uploadUrl, true);
           xhr.onreadystatechange = function() {
@@ -283,7 +283,8 @@
               let json = {};
               try { json = JSON.parse(xhr.responseText); } catch(e) { json = { error: 'Invalid response' }; }
               if (xhr.status >= 200 && xhr.status < 300) {
-                // show modal to save
+                // show modal to save; we received a note id queued for background transcription
+                const noteId = json.id;
                 document.getElementById('modalTitle').value = json.title || title || '';
                 document.getElementById('modalCourse').value = json.course || course || '';
                 document.getElementById('previewText').value = json.text || '';
@@ -300,17 +301,43 @@
                 function closeModal() { document.getElementById('saveModal').style.display = 'none'; recordBtn.disabled = false; chunks = []; }
 
                 discardBtn.onclick = () => { closeModal(); showStatus('Transcription discarded.', 'info'); };
+
+                // Poll the note status for background transcription updates and refresh previewText
+                let pollHandle = null;
+                function startPolling() {
+                  pollHandle = setInterval(async () => {
+                    try {
+                      const res = await fetch(`note_status/${noteId}/`);
+                      const j = await res.json();
+                      if (res.ok) {
+                        if (j.text && j.text.trim()) {
+                          previewEl.value = j.text;
+                          updateSaveState();
+                        }
+                        if (j.status && j.status !== 'pending') {
+                          // stop polling once processed (whisper/error/user_saved)
+                          clearInterval(pollHandle);
+                          pollHandle = null;
+                          showStatus('Transcription updated: ' + j.status, 'info');
+                        }
+                      }
+                    } catch (e) { /* ignore transient polling errors */ }
+                  }, 2500);
+                }
+                startPolling();
+
                 saveBtn.onclick = async () => {
                   const t = document.getElementById('previewText').value;
                   const c = document.getElementById('modalCourse').value;
                   const ti = document.getElementById('modalTitle').value;
                   if (!t || !t.trim()) { showStatus('Cannot save empty transcription.', 'error'); return; }
                   try {
-                    const r = await fetch('save_text/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t, course: c, title: ti }) });
+                    const r = await fetch(`update_note/${noteId}/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t, course: c, title: ti }) });
                     const saved = await r.json();
                     if (r.ok) { window.location.href = `/notes/${saved.id}/edit/`; }
                     else { showStatus('Save failed: ' + (saved.error || JSON.stringify(saved)), 'error'); }
                   } catch (err) { showStatus('Save error: ' + err, 'error'); }
+                  if (pollHandle) clearInterval(pollHandle);
                   closeModal();
                 };
               } else {
