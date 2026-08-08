@@ -4,6 +4,8 @@ import os
 import re
 import tempfile
 import zipfile
+import traceback
+import os as _os
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
@@ -137,12 +139,42 @@ def assistant_api(request):
             excerpt = (r.description or r.content or '')[:200].replace('\n', ' ')
             parts.append(f"- {r.title} (score {score}): {excerpt}")
 
+    if parts:
+        context_text = '\n'.join(parts[:6])
+    else:
+        context_text = ''
+
+    # If the user provided opt-in for OpenAI, and an API key is available, call OpenAI.
+    use_openai = False
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        use_openai = bool(body.get('use_openai'))
+    except Exception:
+        pass
+
+    openai_key = _os.environ.get('OPENAI_API_KEY')
+    if use_openai and openai_key:
+        try:
+            import openai
+            openai.api_key = openai_key
+            system_prompt = "You are a helpful study assistant. Use the provided notes and resources to answer concisely. If insufficient, say so."
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"User question: {message}\n\nContext excerpts:\n{context_text}"}
+            ]
+            resp = openai.ChatCompletion.create(model='gpt-4', messages=messages, temperature=0.2)
+            ai_reply = resp['choices'][0]['message']['content'].strip()
+            return JsonResponse({'reply': ai_reply, 'source': 'openai'})
+        except Exception as e:
+            # fall back to local search reply
+            parts.append(f"(OpenAI error: {str(e)})")
+
     if not parts:
         reply = "I couldn't find matching notes or resources. Try different keywords."
     else:
         reply = '\n'.join(parts)
 
-    return JsonResponse({'reply': reply})
+    return JsonResponse({'reply': reply, 'source': 'local'})
 
 
 def parse_past_paper_questions(content):
@@ -369,7 +401,8 @@ def transcribe(request):
             result = model.transcribe(tmp.name)
             text = result.get('text', '').strip()
         except Exception as e:
-            return JsonResponse({'error': 'Transcription backend unavailable', 'details': str(e)}, status=500)
+            tb = traceback.format_exc()
+            return JsonResponse({'error': 'Transcription backend unavailable', 'details': str(e), 'traceback': tb}, status=500)
 
     course = request.POST.get('course', '').strip()
     title = request.POST.get('title', '').strip() or f"Voice note{(' - ' + course) if course else ''}"

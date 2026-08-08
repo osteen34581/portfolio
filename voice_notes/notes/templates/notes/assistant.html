@@ -8,6 +8,7 @@
       <div id="chat" class="chat-window"></div>
       <form id="chatForm">
         <input id="chatInput" autocomplete="off" placeholder="Ask about a topic or paste a question" />
+        <label style="margin-left:0.5rem"><input type="checkbox" id="useOpenAI" /> Use OpenAI (requires API key on server)</label>
         <button type="submit">Send</button>
       </form>
     </div>
@@ -36,7 +37,8 @@ form.addEventListener('submit', async (e) => {
   input.value = '';
   appendMessage('assistant', 'Searching your notes...');
   try {
-    const res = await fetch('assistant/api/', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({message: msg}) });
+    const useOpenAI = document.getElementById('useOpenAI').checked;
+    const res = await fetch('assistant/api/', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({message: msg, use_openai: useOpenAI}) });
     const json = await res.json();
     // remove last 'Searching...' message
     const last = chat.querySelector('.chat-msg.assistant:last-child');
