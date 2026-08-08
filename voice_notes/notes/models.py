@@ -12,10 +12,14 @@ class Note(models.Model):
     )
     course = models.CharField(max_length=100, blank=True)
     text = models.TextField()
+    title = models.CharField(max_length=150, blank=True)
+    source_filename = models.CharField(max_length=255, blank=True)
+    audio_file = models.FileField(upload_to='audio_uploads/', null=True, blank=True)
+    transcription_source = models.CharField(max_length=50, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        title = self.text[:50].replace('\n', ' ')
+        title = (self.title or self.text[:50]).replace('\n', ' ')
         return f"{self.course or 'General'} Note {self.id}: {title}"
 
 

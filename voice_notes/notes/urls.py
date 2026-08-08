@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('signup/', views.signup, name='signup'),
     path('transcribe/', views.transcribe, name='transcribe'),
+    path('upload_audio/', views.upload_audio, name='upload_audio'),
     path('save_text/', views.save_text, name='save_text'),
     path('resources/add/', views.add_resource, name='add_resource'),
     path('resources/download/<int:resource_id>/', views.download_resource, name='download_resource'),

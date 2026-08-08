@@ -555,3 +555,44 @@ def save_text(request):
         transcription_source='web_speech',
     )
     return JsonResponse({'id': note.id, 'text': note.text, 'course': note.course, 'title': note.title})
+
+
+def upload_audio(request):
+    """Accepts multipart audio upload and queues background transcription.
+    Expects: 'audio' file, optional 'title' and 'course' and 'preview_text'.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    audio = request.FILES.get('audio')
+    if not audio:
+        return JsonResponse({'error': 'No audio file'}, status=400)
+
+    title = request.POST.get('title', '').strip()
+    course = request.POST.get('course', '').strip()
+    preview = request.POST.get('preview_text', '').strip()
+
+    owner = request.user if request.user.is_authenticated else None
+    note = Note.objects.create(
+        owner=owner,
+        course=course,
+        title=title or f"Voice note{(' - ' + course) if course else ''}",
+        text=preview or '',
+        source_filename=getattr(audio, 'name', 'upload'),
+        transcription_source='pending',
+        audio_file=audio,
+    )
+
+    # enqueue background transcription (import tasks locally to avoid circular imports)
+    try:
+        from . import tasks
+        tasks.process_audio_task.delay(note.id)
+    except Exception:
+        # if Celery isn't configured or import fails, attempt synchronous fallback
+        try:
+            from . import tasks
+            tasks.process_audio_task(note.id)
+        except Exception as e:
+            return JsonResponse({'error': 'Failed to queue transcription', 'details': str(e)}, status=500)
+
+    return JsonResponse({'id': note.id, 'message': 'queued'})
