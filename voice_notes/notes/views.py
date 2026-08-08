@@ -9,6 +9,7 @@ from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.db import models
 from django.http import FileResponse, JsonResponse, HttpResponse, HttpResponseForbidden
+from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.lib.pagesizes import letter
@@ -30,11 +31,20 @@ def index(request):
         notes = notes.filter(models.Q(owner__isnull=True) | models.Q(owner=request.user))
     else:
         notes = notes.filter(owner__isnull=True)
+
+    # Optionally show only the current user's notes
+    mine = request.GET.get('mine') == '1'
+    if mine and request.user.is_authenticated:
+        notes = notes.filter(owner=request.user)
     if course_filter:
         notes = notes.filter(course__icontains=course_filter)
     if query:
-        notes = notes.filter(text__icontains=query)
-    notes = notes[:50]
+        notes = notes.filter(models.Q(text__icontains=query) | models.Q(title__icontains=query))
+
+    # paginate notes for the dashboard
+    paginator = Paginator(notes, 10)
+    page_number = request.GET.get('page')
+    notes = paginator.get_page(page_number)
 
     resources = StudyResource.objects.order_by('-created')
     if request.user.is_authenticated:

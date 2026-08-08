@@ -40,10 +40,11 @@
 
       <section class="dashboard">
         <div class="controls">
-          <form method="get" style="grid-template-columns: repeat(3, minmax(160px, 1fr)) 120px; align-items: end; gap: 0.75rem;">
-            <input type="search" name="q" placeholder="Search resources..." value="{{ query }}" />
+          <form method="get" style="grid-template-columns: repeat(4, minmax(140px, 1fr)) 80px; align-items: end; gap: 0.75rem;">
+            <input type="search" name="q" placeholder="Search notes & resources..." value="{{ query }}" />
             <input type="text" name="course" placeholder="Course or subject" value="{{ course_filter }}" />
             <input type="text" name="exam_board" placeholder="Exam board" value="{{ exam_board_filter }}" />
+            <label style="display:flex;align-items:center;gap:0.5rem"><input type="checkbox" name="mine" value="1" {% if request.GET.mine == '1' %}checked{% endif %}/> My notes</label>
             <button type="submit">Filter</button>
           </form>
 
@@ -84,6 +85,18 @@
           <div class="note">No notes yet. Start recording or sign in to save your first note.</div>
           {% endfor %}
         </div>
+
+        {% if notes.has_other_pages %}
+          <nav class="pagination">
+            {% if notes.has_previous %}
+              <a href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ notes.previous_page_number }}">← Prev</a>
+            {% endif %}
+            <span>Page {{ notes.number }} of {{ notes.paginator.num_pages }}</span>
+            {% if notes.has_next %}
+              <a href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ notes.next_page_number }}">Next →</a>
+            {% endif %}
+          </nav>
+        {% endif %}
 
         <section class="resource-hub">
           <div class="resource-grid">
