@@ -1,9 +1,9 @@
 import io
 import json
-import io
-import json
 import os
 import re
+import tempfile
+import zipfile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
@@ -80,6 +80,69 @@ def index(request):
         'student_notes': student_notes,
         'past_papers': past_papers,
     })
+
+
+def assistant(request):
+    # Simple assistant UI page
+    return render(request, 'notes/assistant.html')
+
+
+@csrf_exempt
+def assistant_api(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+        message = (payload.get('message') or '').strip()
+    except Exception:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    if not message:
+        return JsonResponse({'reply': "Send a question or topic and I'll search your notes and resources."})
+
+    # naive keyword search across notes and resources
+    tokens = re.findall(r"\w+", message.lower())
+    if not tokens:
+        return JsonResponse({'reply': 'Could not parse your query.'})
+
+    def score_text(text):
+        t = text.lower()
+        return sum(t.count(tok) for tok in tokens)
+
+    note_scores = []
+    for n in Note.objects.filter(models.Q(owner__isnull=True) | models.Q(owner=request.user)).order_by('-created'):
+        s = score_text(n.title or '') + score_text(n.text or '')
+        if s:
+            note_scores.append((s, n))
+    note_scores.sort(key=lambda x: -x[0])
+
+    resource_scores = []
+    for r in StudyResource.objects.filter(models.Q(owner__isnull=True) | models.Q(owner=request.user)).order_by('-created'):
+        s = score_text(r.title or '') + score_text(r.description or '') + score_text(r.content or '')
+        if s:
+            resource_scores.append((s, r))
+    resource_scores.sort(key=lambda x: -x[0])
+
+    parts = []
+    if note_scores:
+        parts.append('Relevant notes:')
+        for score, n in note_scores[:3]:
+            excerpt = (n.text or '')[:200].replace('\n', ' ')
+            parts.append(f"- {n.title or (n.course or 'General')} (score {score}): {excerpt}")
+
+    if resource_scores:
+        parts.append('Relevant resources:')
+        for score, r in resource_scores[:3]:
+            excerpt = (r.description or r.content or '')[:200].replace('\n', ' ')
+            parts.append(f"- {r.title} (score {score}): {excerpt}")
+
+    if not parts:
+        reply = "I couldn't find matching notes or resources. Try different keywords."
+    else:
+        reply = '\n'.join(parts)
+
+    return JsonResponse({'reply': reply})
 
 
 def parse_past_paper_questions(content):

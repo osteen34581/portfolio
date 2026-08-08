@@ -1,0 +1,50 @@
+{% extends 'notes_base.html' %}
+{% block title %}Assistant{% endblock %}
+{% block content %}
+  <section class="assistant">
+    <div class="assistant-panel">
+      <h2>Study Assistant</h2>
+      <p>Ask a question and I'll search your notes and resources for helpful excerpts.</p>
+      <div id="chat" class="chat-window"></div>
+      <form id="chatForm">
+        <input id="chatInput" autocomplete="off" placeholder="Ask about a topic or paste a question" />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const chat = document.getElementById('chat');
+const form = document.getElementById('chatForm');
+const input = document.getElementById('chatInput');
+
+function appendMessage(who, text) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + (who === 'user' ? 'user' : 'assistant');
+  div.innerText = (who === 'user' ? 'You: ' : 'Assistant: ') + text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = input.value.trim();
+  if (!msg) return;
+  appendMessage('user', msg);
+  input.value = '';
+  appendMessage('assistant', 'Searching your notes...');
+  try {
+    const res = await fetch('assistant/api/', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({message: msg}) });
+    const json = await res.json();
+    // remove last 'Searching...' message
+    const last = chat.querySelector('.chat-msg.assistant:last-child');
+    if (last && last.innerText.includes('Searching')) last.remove();
+    appendMessage('assistant', json.reply || 'No response');
+  } catch (err) {
+    appendMessage('assistant', 'Error: ' + err.message);
+  }
+});
+</script>
+{% endblock %}

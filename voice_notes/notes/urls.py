@@ -14,4 +14,8 @@ urlpatterns = [
     path('resources/<int:resource_id>/qa/', views.resource_qa, name='resource_qa'),
     path('export/txt/<int:note_id>/', views.export_text, name='export_text'),
     path('export/pdf/<int:note_id>/', views.export_pdf, name='export_pdf'),
+    path('notes/<int:note_id>/edit/', views.edit_note, name='edit_note'),
+    path('notes/<int:note_id>/delete/', views.delete_note, name='delete_note'),
+    path('assistant/', views.assistant, name='assistant'),
+    path('assistant/api/', views.assistant_api, name='assistant_api'),
 ]
