@@ -67,8 +67,8 @@ def index(request):
     if exam_board_filter:
         resources = resources.filter(exam_board__icontains=exam_board_filter)
 
-    student_notes = resources.filter(resource_type=StudyResource.STUDENT_NOTE)[:8]
-    past_papers = resources.filter(resource_type=StudyResource.PAST_PAPER)[:8]
+    student_notes = resources.filter(resource_type=StudyResource.STUDENT_NOTE)[:12]
+    past_papers = resources.filter(resource_type=StudyResource.PAST_PAPER)[:12]
 
     return render(request, 'notes/index.html', {
         'notes': notes,

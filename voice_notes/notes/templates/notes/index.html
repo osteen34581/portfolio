@@ -44,6 +44,11 @@
             <input type="search" name="q" placeholder="Search notes & resources..." value="{{ query }}" />
             <input type="text" name="course" placeholder="Course or subject" value="{{ course_filter }}" />
             <input type="text" name="exam_board" placeholder="Exam board" value="{{ exam_board_filter }}" />
+            <select name="resource_type">
+              <option value="">All resources</option>
+              <option value="note" {% if resource_type_filter == 'note' %}selected{% endif %}>Student Note</option>
+              <option value="paper" {% if resource_type_filter == 'paper' %}selected{% endif %}>Past Paper</option>
+            </select>
             <label style="display:flex;align-items:center;gap:0.5rem"><input type="checkbox" name="mine" value="1" {% if request.GET.mine == '1' %}checked{% endif %}/> My notes</label>
             <button type="submit">Filter</button>
           </form>
