@@ -306,8 +306,8 @@
                 });
                 const saved = await r.json();
                 if (r.ok) {
-                  addNoteCard({ id: saved.id, course: saved.course, title: saved.title, text: saved.text });
-                  showStatus('Note saved.', 'success');
+                  // Open the just-saved note in the edit flow for immediate correction
+                  window.location.href = `/notes/${saved.id}/edit/`;
                 } else {
                   showStatus('Save failed: ' + (saved.error || JSON.stringify(saved)), 'error');
                 }
@@ -374,8 +374,8 @@
             });
             const json = await res.json();
             if (res.ok) {
-              addNoteCard({ id: json.id, course, title: json.title, text: json.text });
-              showStatus('Live transcription saved successfully.', 'success');
+              // Navigate to edit page after saving live transcription
+              window.location.href = `/notes/${json.id}/edit/`;
             } else {
               const details = json.details ? ` (${json.details})` : '';
               showStatus(`Save error: ${json.error || JSON.stringify(json)}${details}`, 'error');
