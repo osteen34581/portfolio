@@ -48,6 +48,7 @@
           </form>
 
           <div class="server-controls">
+            <input id="voiceTitleInput" type="text" placeholder="Note title" />
             <input id="courseInput" type="text" placeholder="Course or subject" />
             <button type="button" id="recordBtn">Start Recording</button>
             <button type="button" id="stopBtn" disabled>Stop & Upload</button>
@@ -59,17 +60,24 @@
           </div>
         </div>
 
-        <div class="status-bar" id="status">Ready to capture your next note.</div>
+        <div class="status-banner" id="statusBanner">
+          <span id="statusText">Ready to capture your next note.</span>
+          <button type="button" id="statusClear" class="status-clear" aria-label="Dismiss status">×</button>
+        </div>
 
         <div class="notes-list" id="notes">
           {% for note in notes %}
           <div class="note">
-            <strong>{{ note.course|default:'General' }}</strong>
-            <span>{{ note.created }}</span>
+            <strong>{{ note.title|default:note.course|default:'General' }}</strong>
+            <span>{{ note.course|default:'General' }} • {{ note.created }}</span>
             <p>{{ note.text }}</p>
             <div class="note-actions">
               <a href="{% url 'export_text' note.id %}">Download TXT</a>
               <a href="{% url 'export_pdf' note.id %}">Download PDF</a>
+              {% if user.is_authenticated and note.owner == user %}
+                <a href="{% url 'edit_note' note.id %}">Edit</a>
+                <a href="{% url 'delete_note' note.id %}" class="danger-link">Delete</a>
+              {% endif %}
             </div>
           </div>
           {% empty %}
@@ -165,15 +173,30 @@
       let mediaRecorder, chunks = [];
       const recordBtn = document.getElementById('recordBtn');
       const stopBtn = document.getElementById('stopBtn');
-      const status = document.getElementById('status');
+      const statusBanner = document.getElementById('statusBanner');
+      const statusText = document.getElementById('statusText');
+      const statusClear = document.getElementById('statusClear');
+      const status = statusText;
+
+      function showStatus(message, statusType = 'info') {
+        statusText.textContent = message;
+        statusBanner.className = `status-banner ${statusType}`;
+        statusBanner.style.display = 'flex';
+      }
+
+      function clearStatus() {
+        statusBanner.style.display = 'none';
+      }
+
+      statusClear.addEventListener('click', clearStatus);
 
       function addNoteCard(noteData) {
         const notes = document.getElementById('notes');
         const div = document.createElement('div');
         div.className = 'note';
         div.innerHTML = `
-          <strong>${noteData.course || 'General'}</strong>
-          <span>${new Date().toLocaleString()}</span>
+          ${noteData.title ? `<strong>${noteData.title}</strong>` : ''}
+          <span>${noteData.course || 'General'} • ${new Date().toLocaleString()}</span>
           <p>${noteData.text || 'No transcription text available.'}</p>
           <div class="note-actions">
             <a href="/export/txt/${noteData.id}/">Download TXT</a>
@@ -189,27 +212,29 @@
         mediaRecorder.start();
         recordBtn.disabled = true;
         stopBtn.disabled = false;
-        status.textContent = ' Recording...';
+        showStatus('Recording...', 'info');
       };
 
       stopBtn.onclick = async () => {
         mediaRecorder.stop();
         stopBtn.disabled = true;
-        status.textContent = ' Uploading...';
+        showStatus('Uploading...', 'info');
         mediaRecorder.onstop = async () => {
           const blob = new Blob(chunks, { type: 'audio/webm' });
           const fd = new FormData();
           fd.append('audio', blob, 'note.webm');
           const course = document.getElementById('courseInput').value;
+          const title = document.getElementById('voiceTitleInput').value;
           fd.append('course', course);
+          fd.append('title', title);
           const res = await fetch('transcribe/', { method: 'POST', body: fd });
           const json = await res.json();
           if (res.ok) {
-            addNoteCard({ id: json.id, course, text: json.text });
-            status.textContent = 'Uploaded';
+            addNoteCard({ id: json.id, course, title: json.title, text: json.text });
+            showStatus('Voice note uploaded and converted successfully.', 'success');
           } else {
             const details = json.details ? ` (${json.details})` : '';
-            status.textContent = `Error: ${json.error || JSON.stringify(json)}${details}`;
+            showStatus(`Transcription error: ${json.error || JSON.stringify(json)}${details}`, 'error');
           }
           chunks = [];
           recordBtn.disabled = false;
@@ -242,9 +267,9 @@
               if (res.isFinal) accumulated += res[0].transcript + ' ';
               else interim += res[0].transcript;
             }
-            status.textContent = accumulated + interim;
+            showStatus(accumulated + interim, 'info');
           };
-          recognizer.onerror = (e) => { status.textContent = 'Error: ' + e.error; };
+          recognizer.onerror = (e) => { showStatus('Error: ' + e.error, 'error'); };
           recognizer.start();
           liveBtn.disabled = true;
           stopLiveBtn.disabled = false;
@@ -254,27 +279,25 @@
           if (!recognizer) return;
           recognizer.stop();
           stopLiveBtn.disabled = true;
-          status.textContent = 'Saving...';
+          showStatus('Saving...', 'info');
           const course = document.getElementById('courseInput').value;
+          const title = document.getElementById('voiceTitleInput').value;
           try {
             const res = await fetch('save_text/', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text: accumulated, course })
+              body: JSON.stringify({ text: accumulated, course, title })
             });
             const json = await res.json();
             if (res.ok) {
-              const notes = document.getElementById('notes');
-              const div = document.createElement('div');
-              div.className = 'note';
-              div.innerHTML = `<strong>${json.course || 'General'}</strong><span>${new Date().toLocaleString()}</span><p>${json.text}</p><div class="note-actions"><a href="#">Download TXT</a><a href="#">Download PDF</a></div>`;
-              notes.prepend(div);
-              status.textContent = 'Saved';
+              addNoteCard({ id: json.id, course, title: json.title, text: json.text });
+              showStatus('Live transcription saved successfully.', 'success');
             } else {
-              status.textContent = 'Error saving: ' + (json.error || JSON.stringify(json));
+              const details = json.details ? ` (${json.details})` : '';
+              showStatus(`Save error: ${json.error || JSON.stringify(json)}${details}`, 'error');
             }
           } catch (err) {
-            status.textContent = 'Network error: ' + err;
+            showStatus('Network error: ' + err, 'error');
           }
           accumulated = '';
           liveBtn.disabled = false;

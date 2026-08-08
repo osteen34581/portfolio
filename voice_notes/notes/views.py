@@ -1,9 +1,10 @@
 import io
 import json
+import io
+import json
 import os
 import re
-import tempfile
-import zipfile
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.db import models
@@ -24,8 +25,11 @@ def index(request):
     resource_type_filter = request.GET.get('resource_type', '').strip()
 
     notes = Note.objects.order_by('-created')
+    # Show public notes to everyone; if logged in, also show the user's own notes
     if request.user.is_authenticated:
-        notes = notes.filter(owner=request.user)
+        notes = notes.filter(models.Q(owner__isnull=True) | models.Q(owner=request.user))
+    else:
+        notes = notes.filter(owner__isnull=True)
     if course_filter:
         notes = notes.filter(course__icontains=course_filter)
     if query:
@@ -295,9 +299,17 @@ def transcribe(request):
             return JsonResponse({'error': 'Transcription backend unavailable', 'details': str(e)}, status=500)
 
     course = request.POST.get('course', '').strip()
+    title = request.POST.get('title', '').strip() or f"Voice note{(' - ' + course) if course else ''}"
     owner = request.user if request.user.is_authenticated else None
-    note = Note.objects.create(owner=owner, course=course, text=text)
-    return JsonResponse({'text': text, 'id': note.id, 'course': course})
+    note = Note.objects.create(
+        owner=owner,
+        course=course,
+        title=title,
+        text=text,
+        source_filename=getattr(audio, 'name', 'recording.webm'),
+        transcription_source='whisper',
+    )
+    return JsonResponse({'text': text, 'id': note.id, 'course': course, 'title': title})
 
 
 def export_text(request, note_id):
@@ -332,6 +344,35 @@ def export_pdf(request, note_id):
     return response
 
 
+@login_required
+def edit_note(request, note_id):
+    note = Note.objects.filter(id=note_id).first()
+    if not note or note.owner != request.user:
+        return HttpResponseForbidden('Access denied')
+
+    if request.method == 'POST':
+        note.title = request.POST.get('title', '').strip() or note.title
+        note.course = request.POST.get('course', '').strip() or note.course
+        note.text = request.POST.get('text', '').strip() or note.text
+        note.save()
+        return redirect('index')
+
+    return render(request, 'notes/edit_note.html', {'note': note})
+
+
+@login_required
+def delete_note(request, note_id):
+    note = Note.objects.filter(id=note_id).first()
+    if not note or note.owner != request.user:
+        return HttpResponseForbidden('Access denied')
+
+    if request.method == 'POST':
+        note.delete()
+        return redirect('index')
+
+    return render(request, 'notes/delete_note.html', {'note': note})
+
+
 def signup(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -358,6 +399,7 @@ def save_text(request):
         payload = json.loads(request.body.decode('utf-8'))
         text = payload.get('text', '').strip()
         course = payload.get('course', '').strip()
+        title = payload.get('title', '').strip() or f"Live note{(' - ' + course) if course else ''}"
     except Exception:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
@@ -365,5 +407,12 @@ def save_text(request):
         return JsonResponse({'error': 'Empty text'}, status=400)
 
     owner = request.user if request.user.is_authenticated else None
-    note = Note.objects.create(owner=owner, course=course, text=text)
-    return JsonResponse({'id': note.id, 'text': note.text, 'course': note.course})
+    note = Note.objects.create(
+        owner=owner,
+        course=course,
+        title=title,
+        text=text,
+        source_filename='live-transcription',
+        transcription_source='web_speech',
+    )
+    return JsonResponse({'id': note.id, 'text': note.text, 'course': note.course, 'title': note.title})
