@@ -3,14 +3,25 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def parse_env_list(value, default):
+    if value is None:
+        return list(default)
+    items = [item.strip() for item in value.split(',') if item.strip()]
+    return items if items else list(default)
+
+
 # Read secret key from environment in production
 SECRET_KEY = os.getenv('SECRET_KEY', 'replace-this-in-production')
 
 # Use environment variable to toggle debug in production; default to True for now
 DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['https://localhost:8000', 'http://localhost:8000']
+ALLOWED_HOSTS = parse_env_list(os.getenv('ALLOWED_HOSTS'), ['*'])
+CSRF_TRUSTED_ORIGINS = parse_env_list(
+    os.getenv('CSRF_TRUSTED_ORIGINS'),
+    ['https://localhost:8000', 'http://localhost:8000'],
+)
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 if DATABASE_URL:

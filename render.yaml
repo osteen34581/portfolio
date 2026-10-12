@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: voice-notes
+    env: docker
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    plan: free
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "voice-notes.onrender.com,localhost,127.0.0.1"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://voice-notes.onrender.com,http://localhost:8000,https://localhost:8000"
+      - key: DATABASE_URL
+        value: "sqlite:////tmp/db.sqlite3"

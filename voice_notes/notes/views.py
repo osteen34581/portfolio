@@ -89,6 +89,47 @@ def assistant(request):
     return render(request, 'notes/assistant.html')
 
 
+def _tokenise_query(text):
+    tokens = re.findall(r"[a-zA-Z0-9]+", (text or '').lower())
+    return [token for token in tokens if len(token) > 2]
+
+
+def _score_search_text(text, query_tokens):
+    if not text or not query_tokens:
+        return 0
+    normalized = re.sub(r"[^a-zA-Z0-9\s]", ' ', text.lower())
+    hits = 0
+    for token in query_tokens:
+        hits += normalized.count(token) * 5
+        if token in normalized.split():
+            hits += 2
+    phrase = ' '.join(query_tokens)
+    if phrase and phrase in normalized:
+        hits += 10
+    return hits
+
+
+def _build_snippet(text, query_tokens, limit=240):
+    if not text:
+        return ''
+    normalized = re.sub(r"\s+", ' ', text).strip()
+    if not query_tokens:
+        return normalized[:limit]
+
+    lowered = normalized.lower()
+    best_index = 0
+    for token in query_tokens:
+        idx = lowered.find(token)
+        if idx != -1:
+            best_index = idx
+            break
+    start = max(0, best_index - 80)
+    snippet = normalized[start:start + limit]
+    if len(normalized) > len(snippet):
+        snippet = snippet.rstrip() + '…'
+    return snippet.replace('\n', ' ')
+
+
 @csrf_exempt
 def assistant_api(request):
     if request.method != 'POST':
@@ -103,56 +144,54 @@ def assistant_api(request):
     if not message:
         return JsonResponse({'reply': "Send a question or topic and I'll search your notes and resources."})
 
-    # naive keyword search across notes and resources
-    tokens = re.findall(r"\w+", message.lower())
-    if not tokens:
+    query_tokens = _tokenise_query(message)
+    if not query_tokens:
         return JsonResponse({'reply': 'Could not parse your query.'})
 
-    def score_text(text):
-        t = text.lower()
-        return sum(t.count(tok) for tok in tokens)
+    def build_ranked_items(queryset, text_getter, title_getter, kind):
+        scored = []
+        for item in queryset:
+            score = _score_search_text(title_getter(item), query_tokens) * 3
+            score += _score_search_text(text_getter(item), query_tokens) * 2
+            if score:
+                snippet = _build_snippet(text_getter(item) or title_getter(item) or '', query_tokens)
+                scored.append({'score': score, 'item': item, 'snippet': snippet, 'kind': kind})
+        scored.sort(key=lambda record: record['score'], reverse=True)
+        return scored[:3]
 
-    note_scores = []
     if request.user.is_authenticated:
         note_qs = Note.objects.filter(models.Q(owner__isnull=True) | models.Q(owner=request.user)).order_by('-created')
-    else:
-        note_qs = Note.objects.filter(owner__isnull=True).order_by('-created')
-    for n in note_qs:
-        s = score_text(n.title or '') + score_text(n.text or '')
-        if s:
-            note_scores.append((s, n))
-    note_scores.sort(key=lambda x: -x[0])
-
-    resource_scores = []
-    if request.user.is_authenticated:
         resource_qs = StudyResource.objects.filter(models.Q(owner__isnull=True) | models.Q(owner=request.user)).order_by('-created')
     else:
+        note_qs = Note.objects.filter(owner__isnull=True).order_by('-created')
         resource_qs = StudyResource.objects.filter(owner__isnull=True).order_by('-created')
-    for r in resource_qs:
-        s = score_text(r.title or '') + score_text(r.description or '') + score_text(r.content or '')
-        if s:
-            resource_scores.append((s, r))
-    resource_scores.sort(key=lambda x: -x[0])
+
+    note_scores = build_ranked_items(note_qs, lambda item: item.text or '', lambda item: item.title or item.course or 'General', 'note')
+    resource_scores = build_ranked_items(
+        resource_qs,
+        lambda item: (item.description or '') + '\n' + (item.content or ''),
+        lambda item: item.title or item.course or 'General',
+        'resource',
+    )
 
     parts = []
     if note_scores:
         parts.append('Relevant notes:')
-        for score, n in note_scores[:3]:
-            excerpt = (n.text or '')[:200].replace('\n', ' ')
-            parts.append(f"- {n.title or (n.course or 'General')} (score {score}): {excerpt}")
+        for result in note_scores:
+            note = result['item']
+            parts.append(f"- {note.title or (note.course or 'General')} (score {result['score']}): {result['snippet']}")
 
     if resource_scores:
         parts.append('Relevant resources:')
-        for score, r in resource_scores[:3]:
-            excerpt = (r.description or r.content or '')[:200].replace('\n', ' ')
-            parts.append(f"- {r.title} (score {score}): {excerpt}")
+        for result in resource_scores:
+            resource = result['item']
+            parts.append(f"- {resource.title} (score {result['score']}): {result['snippet']}")
 
     if parts:
         context_text = '\n'.join(parts[:6])
     else:
         context_text = ''
 
-    # If the user provided opt-in for OpenAI, and an API key is available, call OpenAI.
     use_openai = False
     try:
         body = json.loads(request.body.decode('utf-8'))
@@ -163,18 +202,20 @@ def assistant_api(request):
     openai_key = _os.environ.get('OPENAI_API_KEY')
     if use_openai and openai_key:
         try:
-            import openai
-            openai.api_key = openai_key
+            from openai import OpenAI
+            client = OpenAI(api_key=openai_key)
             system_prompt = "You are a helpful study assistant. Use the provided notes and resources to answer concisely. If insufficient, say so."
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"User question: {message}\n\nContext excerpts:\n{context_text}"}
-            ]
-            resp = openai.ChatCompletion.create(model='gpt-4', messages=messages, temperature=0.2)
-            ai_reply = resp['choices'][0]['message']['content'].strip()
+            response = client.chat.completions.create(
+                model='gpt-4o-mini',
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"User question: {message}\n\nContext excerpts:\n{context_text}"},
+                ],
+                temperature=0.2,
+            )
+            ai_reply = response.choices[0].message.content.strip()
             return JsonResponse({'reply': ai_reply, 'source': 'openai'})
         except Exception as e:
-            # fall back to local search reply
             parts.append(f"(OpenAI error: {str(e)})")
 
     if not parts:
