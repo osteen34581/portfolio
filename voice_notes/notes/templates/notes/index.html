@@ -281,7 +281,13 @@
           xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
               let json = {};
-              try { json = JSON.parse(xhr.responseText); } catch(e) { json = { error: 'Invalid response' }; }
+              try {
+                json = JSON.parse(xhr.responseText);
+              } catch (e) {
+                const contentType = xhr.getResponseHeader('Content-Type') || 'unknown content type';
+                json = { error: `Server returned a non-JSON response (HTTP ${xhr.status}, ${contentType}). Check the server logs.` };
+                console.error('Audio upload returned a non-JSON response:', xhr.status, contentType, xhr.responseText);
+              }
               if (xhr.status >= 200 && xhr.status < 300) {
                 // show modal to save; we received a note id queued for background transcription
                 const noteId = json.id;
